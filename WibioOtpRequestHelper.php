@@ -175,36 +175,6 @@ class WibioOtpRequestHelper
         return json_decode($answer);
     }
 
-/*initToken()
-        POST /admin/init
-        initializes a token
-        Parameters
-            otpkey – (required) the hmac Key of the token
-            genkey – (required) =1, if key should be generated. We either need otpkey or genkey
-            keysize – (optional) either 20 or 32. Default is 20
-            serial – (required) the serial number / identifier of the token
-            description – (optional)
-            pin – (optional) the pin of the user pass
-            user – (optional) login user name
-            realm – (optional) realm of the user
-            type – (opt:ional) the type of the token
-            tokenrealm – (optional) the realm a token should be put into
-            otplen – (optional) length of the OTP value
-            hashlib – (optional) used hashlib sha1 oder sha256
-        NB: ocra2 & qrtoken are supported
-*/
-    public function adminInitOtpToken($otpkey, $serial, $pin='0000', $user='', $realm='', $type='HMAC', $tokenrealm='', $otplen=8, $hashlib='sha1')
-    {
-        $genkey = ($otpkey == "") ? 1 : 0;
-        curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/admin/init");
-        curl_setopt($this->ch, CURLOPT_POST, true);
-        curl_setopt($this->ch, CURLOPT_POSTFIELDS, "otpkey=".$otpkey."&genkey=".$genkey."&serial=".$serial."&pin=".$pin."&user=".$user."&realm=".$realm."&type=".$type."&tokenrealm=".$tokenrealm."&otplen=".$otplen."&hashlib=".$hashlib);
-        curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
-        $answer = curl_exec($this->ch);
-        if (curl_error($this->ch)) return ("cURL request error!");
-        return json_decode($answer);
-    }
-
 /*remove()
         POST /admin/remove
         deletes either a certain token given by serial or all tokens of a user
