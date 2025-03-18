@@ -1,0 +1,52 @@
+<div class="mx-auto sm:px-6 lg:px-8" id="SMtypeC">
+    <div class="row">
+        <div class="col-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-light-success text-success text-uppercase d-flex flex-row">
+                    <i class="bi bi-credit-card"></i>
+                    <span  class="my-auto ms-2" ><b>Type:</b> D</span>
+                </div>
+                <div class="card-body bg-light-secondary">
+                    <div id="card_img_container">
+                        <img src="{{ Vite::asset('resources/images/type D.png') }}" alt="Wibio smartcard type-D" class="mx-auto my-auto">
+                    </div>
+                    <div id="workingCard">
+                        <i class="bi bi-wifi slide active"></i>
+                        <i class="bi bi-wifi-2 slide"></i>
+                        <i class="bi bi-wifi-1 slide"></i>
+                    </div>
+                </div>
+                <div class="card-footer text-muted">Card state: <span id="cardstate">present</span></div>
+            </div>
+        </div>
+        <div class="col-8 mb-4" id="useCard">
+            <div class="card h-100">
+                <div class="card-header bg-light-success text-success text-uppercase d-flex flex-row">
+                    <i class="bi bi-fingerprint"></i>
+                    <span id="cardid" class="my-auto ms-2" >Otp sequences</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-8">
+                            <select class="form-select" size="10"  id="sequences" aria-label="size 3 select example">
+                            </select>
+                            <button class="my-2 btn btn-success w-100" id ="getOtp">Login</button>
+                            <div class="text-center">
+                                <h2 id="otp" class="text-success">OTP: </h2>
+                                <section class="countdown-container">
+                                    <div class="seconds-container">
+                                      <div class="seconds"></div>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                        <div class="col-4 sensor_container">
+                            <img src="{{ Vite::asset('resources/images/fingerprint_partial.png') }}" id="imgfinger" class="mx-auto imgfinger_hidden" alt="Wibio fingerprint request">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-muted">Select a sequence and click on button to perform the login</div>
+            </div>
+        </div>
+    </div>
+</div>
