@@ -1,10 +1,16 @@
 <?php
 
+namespace App\Helpers;
+
+use http;
+use Illuminate\Support\Facades\Storage;
+
 class WibioOtpRequestHelper
 {
     const SERVER = 'https://otpsandbox.wibiocard.com';
     const USERNAME = '***************************';
     const PASSWORD = '***************************';
+    const REALM = '***************************';
 
     private $ch;
     private $cookieFileName;
@@ -16,8 +22,7 @@ class WibioOtpRequestHelper
     }
 
     public function __destruct() {
-        curl_close($this->ch);
-        Storage::disk('local')->delete($this->cookieFileName);
+        $this->end();
     }
 
 /*init()
@@ -66,6 +71,15 @@ class WibioOtpRequestHelper
         {
             return $e->getMessage();
         }
+    }
+
+/*end()
+        This function is used to close the session with the WibioOtp server and delete the local cookie file.
+*/
+    public function end()
+    {
+        curl_close($this->ch);
+        Storage::disk('local')->delete($this->cookieFileName);
     }
 
 /*assign()
@@ -169,6 +183,36 @@ class WibioOtpRequestHelper
     {
         curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/admin/getTokenOwner?serial=".$serial);
         curl_setopt($this->ch, CURLOPT_POST, false);
+        curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
+        $answer = curl_exec($this->ch);
+        if (curl_error($this->ch)) return ("cURL request error!");
+        return json_decode($answer);
+    }
+
+/*initToken()
+        POST /admin/init
+        initializes a token
+        Parameters
+            otpkey – (required) the hmac Key of the token
+            genkey – (required) =1, if key should be generated. We either need otpkey or genkey
+            keysize – (optional) either 20 or 32. Default is 20
+            serial – (required) the serial number / identifier of the token
+            description – (optional)
+            pin – (optional) the pin of the user pass
+            user – (optional) login user name
+            realm – (optional) realm of the user
+            type – (opt:ional) the type of the token
+            tokenrealm – (optional) the realm a token should be put into
+            otplen – (optional) length of the OTP value
+            hashlib – (optional) used hashlib sha1 oder sha256
+        NB: ocra2 & qrtoken are supported
+*/
+    public function adminInitOtpToken($otpkey, $serial, $pin='0000', $user='', $realm='mirahtec', $type='HMAC', $tokenrealm='', $otplen=8, $hashlib='sha1')
+    {
+        $genkey = ($otpkey == "") ? 1 : 0;
+        curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/admin/init");
+        curl_setopt($this->ch, CURLOPT_POST, true);
+        curl_setopt($this->ch, CURLOPT_POSTFIELDS, "otpkey=".$otpkey."&genkey=".$genkey."&serial=".$serial."&pin=".$pin."&user=".$user."&realm=".self::REALM."&type=".$type."&tokenrealm=".$tokenrealm."&otplen=".$otplen."&hashlib=".$hashlib);
         curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
         $answer = curl_exec($this->ch);
         if (curl_error($this->ch)) return ("cURL request error!");
@@ -388,7 +432,7 @@ class WibioOtpRequestHelper
 */
     public function adminUserList($searchexpr='', $realm='', $resConf='', $page=1, $rp=100)
     {
-        curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/admin/userlist?searchexpr=".$searchexpr."&realm=".$realm."&resConf=".$resConf."&page=".$page."&rp=".$rp);
+        curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/admin/userlist?searchexpr=".$searchexpr."&realm=".self::REALM."&resConf=".$resConf."&page=".$page."&rp=".$rp);
         curl_setopt($this->ch, CURLOPT_POST, false);
         curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
         $answer = curl_exec($this->ch);
@@ -396,5 +440,39 @@ class WibioOtpRequestHelper
         return json_decode($answer);
     }
 
+
+}
+
+class WibioOtpValidationHelper
+{
+    const SERVER = 'https://otpsandbox.wibiocard.com';
+    private $ch;
+
+    public function __construct() {
+        $this->ch = curl_init();
+    }
+
+    public function __destruct() {
+        curl_close($this->ch);
+    }
+
+/*validateOtp()
+        GET /validate/check
+        This function is used to validate the OTP against the WibioOtp server.
+        Parameters
+            user – (required) the username
+            pass – (required) the OTP
+            realm – (required) the realm
+            serial – (optional) the serial number / identifier of the token
+*/
+    public function validateOtp($user, $pass, $realm="", $serial = '')
+    {
+        curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/validate/check?user=".$user."&pass=".$pass."&realm=".self::REALM."&serial=".$serial);
+        curl_setopt($this->ch, CURLOPT_POST, false);
+        curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
+        $answer = curl_exec($this->ch);
+        if (curl_error($this->ch)) return ("cURL request error!");
+        return json_decode($answer);
+    }
 
 }
