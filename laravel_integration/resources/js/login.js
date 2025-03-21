@@ -361,7 +361,7 @@ function ListSequences_F()
  *
  * @throws Will throw an error if the login fails or if an error occurs during sequence listing.
  */
-function ListSequences_T()
+function ListSequences_D()
 {
     try{
         new Promise(resolve => resolve(c.CmdsExecutor(c._reader, "[SelectBeCard][LoginBeCard][ReadSequenceInfo]"))).then((selectResult) => {
