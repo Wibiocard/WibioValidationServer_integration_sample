@@ -58,13 +58,19 @@ class CardsController extends Controller
 
         /* 
             send user generation request to WibioWebserver
-            'user' => explode("@",$user->email)[0],
-            'email' => $user->email,
-            'givenName' => $user->name,
-            'password' => Hash::make(rand(1000000000,9999999999)),
-            'telephoneNumber' => $request->user_mobile ?? '0000000000',
-            'mobile' => $request->user_mobile ?? '0000000000',
-            'sn' => $user->name,
+            $request->validate([
+                'company' => 'required|max:255',
+                'userEmail' => 'required|max:255',
+                'givenName' => 'required|max:255',
+                'telephoneNumber' => 'max:255',
+                'mobile' => 'max:255',
+                'cardType' => 'required|max:1',   //read from card
+                'cardId' => 'required|max:16',    //read from card
+                'otpLenght' => 'required|max:1',  // 6, 8
+                'otpType' => 'required|max:4',    // HMAC, TOTP
+                'intend' => 'required|max:255',
+                'comment' => 'max:255',
+            ]);
         */
         if ($resp == "cURL request error!") return back()->withError('Generate new token', 'Unable to create the token');
         return view('admin.card_perso', compact('serial'));
