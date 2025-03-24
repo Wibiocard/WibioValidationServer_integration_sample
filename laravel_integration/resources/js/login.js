@@ -169,10 +169,28 @@ async function executePartialScript()
     switch(c._cardType)
     {
         case 'F':
-            VerifyEnrollStatus_F();
+            ListSequences_F();
+            document.querySelector('#getOtp').addEventListener('click', async function(event){
+                let sequence = document.querySelector("#sequences").value.split(": ")[1];
+                if (!sequence)
+                    c.manageMessages("#b_mess", "d", "Select a sequence to get OTP");
+                else
+                    GetHotp_F(sequence);
+            });
             break;
         case 'D':
-            VerifyEnrollStatus_D();
+            ListSequences_D();
+            document.querySelector('#getOtp').addEventListener('click', async function(event){
+                let sequence = document.querySelector("#sequences").value;
+                let otpType = sequence.split(": ")[0];
+                if (!sequence)
+                    c.manageMessages("#b_mess", "d", "Select a sequence to get OTP");
+                else
+                    if (otpType == "HOTP")
+                        GetHotp_T(sequence.split(": ")[1]);
+                    else
+                        GetTotp_T(sequence.split(": ")[1]);
+            });
             break;
         default:
             c.manageMessages("#b_mess", "d", "Card type doesn't support cloud functonality");
@@ -183,123 +201,6 @@ async function executePartialScript()
         navigator.clipboard.writeText(document.querySelector("#otp").innerHTML.split(": ")[1]);
     });
 
-}
-
-/**
- * Verifies the enrollment status of a card type F and updates the UI accordingly.
- *
- * This function performs the following steps:
- * 1. Executes a command to get the enrollment status of the card.
- * 2. Checks the response to determine if the card is already enrolled or needs enrollment.
- * 3. If the card is already enrolled, it updates the UI to remove the enroll button and sets up the OTP retrieval.
- * 4. If the card needs enrollment, it sets up the UI for fingerprint enrollment and handles the enrollment process.
- *
- * @async
- * @function VerifyEnrollStatus_F
- * @throws Will log an error and display a message if an error occurs during the enrollment status verification.
- */
-function VerifyEnrollStatus_F()
-{
-    try{
-        new Promise(resolve => resolve(c.CmdsExecutor(c._reader, "[SelectEnroll][GetEnrollStatus]"))).then((execResult) => {
-            if(c.countApduResponse(execResult) == 2)
-            {
-                if (c.checkApduResponse(execResult[0]) == false)
-                {
-                    c.manageMessages("#f_mess", "w", "Unable to verify the enroll status. Assuming the card is already enrolled using the hardware enroll tool.");
-                    ListSequences_F();
-                    document.querySelector("#enrollCard").remove();
-                }
-                else
-                {
-                    c.manageMessages("#f_mess", "s", "Card applet selected");
-                    if (c.checkApduResponse(execResult[1]) == true)
-                    {
-                        var ApduData = c.parseApduResponse(execResult[1]);
-                        if (ApduData.Status == "complete")
-                        {
-                            document.querySelector("#enrollCard").remove();
-                            ListSequences_F();
-                            document.querySelector('#getOtp').addEventListener('click', async function(event){
-                                let sequence = document.querySelector("#sequences").value.split(": ")[1];
-                                if (!sequence)
-                                    c.manageMessages("#b_mess", "d", "Select a sequence to get OTP");
-                                else
-                                    GetHotp_F(sequence);
-                            });
-                        }
-                        throw 'Card not enrolled';
-                    }
-                }
-            }
-        });
-    } catch(ex) {
-        console.log(ex);
-        c.manageMessages("#b_mess", "d", "An error occurred during enroll status verification. Please check your card and try again");
-    }
-}
-
-
-/**
- * VerifyEnrollStatus_D function handles the verification of the enrollment status of a card.
- * It executes a series of commands to check the status of the card and manages the enrollment process.
- *
- * The function performs the following steps:
- * 1. Selects the card and logs in.
- * 2. Checks the enrollment status of two fingers.
- * 3. If the card is not found or login fails, it displays appropriate error messages.
- * 4. If the card is selected, it proceeds to check the enrollment status of each finger.
- * 5. If a finger is not enrolled or enrollment is in progress, it displays the enrollment schema and handles the enrollment process.
- * 6. If a finger is already enrolled, it moves to the next finger.
- * 7. If the maximum number of touches is reached, it finalizes the enrollment.
- * 8. If any error occurs during the process, it displays appropriate error messages and logs the error.
- *
- * @throws {string} Throws an error message if any step in the process fails.
- */
-function VerifyEnrollStatus_D()
-{
-    try{
-        new Promise(resolve => resolve(c.CmdsExecutor(c._reader, "[SelectEnroll][LoginEnroll][GetEnrollStatus {finger_id=00}][GetEnrollStatus {finger_id=01}]"))).then((execResult) => {
-            if (c.countApduResponse(execResult) == 4)
-            {
-                if (c.checkApduResponse(execResult[0]) == false)
-                {
-                    c.manageMessages("#f_mess", "d", "Applet not found");
-                    throw 'Applet not found';
-                }
-                if (c.checkApduResponse(execResult[1]) == false)
-                {
-                    c.manageMessages("#f_mess", "d", "Failed card validation");
-                    throw 'Failed card validation';
-                }
-                if (c.checkApduResponse(execResult[2]) == false || c.parseApduResponse(execResult[2]).finger_status != "Finalized")
-                {
-                    c.manageMessages("#f_mess", "d", "Failed enrollment validation");
-                    throw 'Failed enrollment validation';
-                }
-                if (c.checkApduResponse(execResult[3]) == false || c.parseApduResponse(execResult[3]).finger_status != "Finalized")
-                {
-                    c.manageMessages("#f_mess", "d", "Failed enrollment validation");
-                    throw 'Failed enrollment validation';
-                }
-                ListSequences_D();
-                document.querySelector('#getOtp').addEventListener('click', async function(event){
-                    let sequence = document.querySelector("#sequences").value;
-                    let otpType = sequence.split(": ")[0];
-                    if (!sequence)
-                        c.manageMessages("#b_mess", "d", "Select a sequence to get OTP");
-                    else
-                        if (otpType == "HOTP")
-                            GetHotp_T(sequence.split(": ")[1]);
-                        else
-                            GetTotp_T(sequence.split(": ")[1]);
-                });
-            }
-        });
-    } catch(ex) {
-        console.log(ex);
-        c.manageMessages("#b_mess", "d", "An error occurred during enroll status verification. Please check your card and try again");
-    }
 }
 
 /**
@@ -390,7 +291,6 @@ function ListSequences_D()
                 }
             }
             c.wait(2000);
-            ListUserDatas_T();
         });
     } catch(ex) {
         console.log(ex);
@@ -469,21 +369,18 @@ function GetHotp_T(sequence)
                 c.manageMessages("#f_mess", "d", "OTP sequence not associated to your email");
                 throw 'OTP sequence not associated to your email';
             }
-            new Promise(resolve => resolve(c.CmdsExecutor(c._reader, "[SelectBeCard][LoginBeCard][ReadHotpToken {serial_no="+sequence+"}]"))).then((execResult) => {
-                if(c.countApduResponse(execResult) == 3)
+            new Promise(resolve => resolve(c.CmdsExecutor(c._reader, "[ReadHotpToken {serial_no="+sequence+"}]"))).then((execResult) => {
+                if(c.countApduResponse(execResult) == 1 && c.checkApduResponse(execResult[0]) == true)
                 {
-                    if (c.checkApduResponse(execResult[0]) == true && c.checkApduResponse(execResult[2]) == true)
-                    {
-                        var ApduData = c.parseApduResponse(execResult[2]);
-                        document.querySelector("#otp").innerHTML = 'HOTP: ' + ApduData.Otp;
-                        c.manageFinger("#imgfinger", "verify");
-                        sendData(ApduData.Otp, sequence, document.querySelector("#user_email").value);
-                    }
-                    else
-                    {
-                        document.querySelector("#otp").innerHTML = "HOTP not generated";
-                        c.manageFinger("#imgfinger", "broken");
-                    }
+                    var ApduData = c.parseApduResponse(execResult[0]);
+                    document.querySelector("#otp").innerHTML = 'HOTP: ' + ApduData.Otp;
+                    c.manageFinger("#imgfinger", "verify");
+                    sendData(ApduData.Otp, sequence, document.querySelector("#user_email").value);
+                }
+                else
+                {
+                    document.querySelector("#otp").innerHTML = "HOTP not generated";
+                    c.manageFinger("#imgfinger", "broken");
                 }
             });
         });
@@ -515,23 +412,20 @@ function GetTotp_T(sequence)
                 c.manageMessages("#f_mess", "d", "OTP sequence not associated to your email");
                 throw 'OTP sequence not associated to your email';
             }
-            new Promise(resolve => resolve(c.CmdsExecutor(c._reader, "[SelectBeCard][LoginBeCard][ReadTotpToken {timestamp=}]"))).then((execResult) => {
-                if(c.countApduResponse(execResult) == 3)
+            new Promise(resolve => resolve(c.CmdsExecutor(c._reader, "[ReadTotpToken {timestamp=}]"))).then((execResult) => {
+                if(c.countApduResponse(execResult) == 1 && c.checkApduResponse(execResult[0]) == true)
                 {
-                    if (c.checkApduResponse(execResult[0]) == true && c.checkApduResponse(execResult[2]) == true)
-                    {
-                        var ApduData = c.parseApduResponse(execResult[2]);
-                        c.manageFinger("#imgfinger", "verify");
-                        ApduData.Otp.forEach((otps, index) => {
-                            if (otps.constructor !== Array && ApduData.Serial_no[index] == sequence)
-                                sendData(otps, sequence, document.querySelector("#user_email").value);
-                        });
-                    }
-                    else
-                    {
-                        c.manageFinger("#imgfinger", "broken");
-                        document.querySelector("#otp").innerHTML = "TOTP not generated";
-                    }
+                    var ApduData = c.parseApduResponse(execResult[2]);
+                    c.manageFinger("#imgfinger", "verify");
+                    ApduData.Otp.forEach((otps, index) => {
+                        if (otps.constructor !== Array && ApduData.Serial_no[index] == sequence)
+                            sendData(otps, sequence, document.querySelector("#user_email").value);
+                    });
+                }
+                else
+                {
+                    c.manageFinger("#imgfinger", "broken");
+                    document.querySelector("#otp").innerHTML = "TOTP not generated";
                 }
             });
         });
@@ -553,17 +447,23 @@ function GetTotp_T(sequence)
  * @returns {Promise<void>} - A promise that resolves when the data is sent.
  */
 async function sendData(otp, sequence, email) {
-    const formData = new FormData();
-        formData.append("otp", otp);
-        formData.append("sequence", sequence);
-        formData.append("email", email);
-    try {
-        const response = await fetch("/wbc/login", {
-            method: "POST",
-            body: formData,
-        });
-        console.log(await response.json());
-    } catch (e) {
-        console.error(e);
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = "/wbc/login";
+    const _token = document.querySelector('meta[name="csrf-token"]').content;
+    const params = { otp, sequence, email, _token };
+    for (const key in params) {
+        if (params.hasOwnProperty(key)) {
+            const hiddenField = document.createElement('input');
+            hiddenField.type = 'hidden';
+            hiddenField.name = key;
+            hiddenField.value = params[key];
+            form.appendChild(hiddenField);
+        }
     }
+    document.body.appendChild(form);
+    form.submit();
 }
+
+
