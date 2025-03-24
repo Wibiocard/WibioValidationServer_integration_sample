@@ -47,6 +47,6 @@ class Wibio2FAController extends Controller
             return redirect()->intended(route('dashboard', absolute: false));
         }
         else
-            return back()->withError('Wibio token login', 'Invalid OTP');
+            return back()->withError('Wibio token login', $resp->detail->error);
     }
 }
