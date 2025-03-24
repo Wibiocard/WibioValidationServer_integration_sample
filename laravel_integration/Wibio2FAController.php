@@ -32,20 +32,18 @@ class Wibio2FAController extends Controller
      */
     public function verify2FA(Request $request)
     {
-        $userId = $request->session()->pull('user_id');
-        $user = User::find($userId);
-        $otp = $request->get('one_time_password');
+        $user = User::where("email", $request->email)->first();
         if (!$user) return back()->withError('Wibio token login', 'User not found');
         $token = $user->hardware_token;
         if (!$token) return back()->withError('Wibio token login', 'Token not found');
 
         $WibioOtpValidationHelper = new WibioOtpValidationHelper();
-        $resp = $WibioOtpValidationHelper->validateOtp($user->email, $otp, '');
+        $resp = $WibioOtpValidationHelper->validateOtp($user->email, $otp, '');  //realm implicit in email address
         $WibioOtpValidationHelper = null;
         if ($resp == "cURL request error!") return back()->withError('Wibio token login', 'Unable to validate token');
-        if ($resp->result->value->status == "ok")
+        if ($resp->result->value == true)
         {
-            Auth::loginUsingId($userId);
+            Auth::loginUsingId($user->id);
             return redirect()->intended(route('dashboard', absolute: false));
         }
         else
