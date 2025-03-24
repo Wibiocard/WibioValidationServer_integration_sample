@@ -101,22 +101,6 @@ class WibioOtpRequestHelper
         return json_decode($answer);
     }
 
-/*check_serial()
-        GET /admin/check_serial
-        This function checks, if a given serial will be unique. It returns True if the serial does not yet exist and new_serial as a new value for a serial, that does not exist, yet
-        Parameters
-            serial – (required) the serial number / identifier of the token
-*/
-    public function adminCheck($serial)
-    {
-        curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/admin/check_serial?serial=".$serial);
-        curl_setopt($this->ch, CURLOPT_POST, false);
-        curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
-        $answer = curl_exec($this->ch);
-        if (curl_error($this->ch)) return ("cURL request error!");
-        return json_decode($answer);
-    }
-
 /*disable()
         POST /admin/disable
         disables a token given by serial or all tokens of a user
@@ -183,36 +167,6 @@ class WibioOtpRequestHelper
     {
         curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/admin/getTokenOwner?serial=".$serial);
         curl_setopt($this->ch, CURLOPT_POST, false);
-        curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
-        $answer = curl_exec($this->ch);
-        if (curl_error($this->ch)) return ("cURL request error!");
-        return json_decode($answer);
-    }
-
-/*initToken()
-        POST /admin/init
-        initializes a token
-        Parameters
-            otpkey – (required) the hmac Key of the token
-            genkey – (required) =1, if key should be generated. We either need otpkey or genkey
-            keysize – (optional) either 20 or 32. Default is 20
-            serial – (required) the serial number / identifier of the token
-            description – (optional)
-            pin – (optional) the pin of the user pass
-            user – (optional) login user name
-            realm – (optional) realm of the user
-            type – (opt:ional) the type of the token
-            tokenrealm – (optional) the realm a token should be put into
-            otplen – (optional) length of the OTP value
-            hashlib – (optional) used hashlib sha1 oder sha256
-        NB: ocra2 & qrtoken are supported
-*/
-    public function adminInitOtpToken($otpkey, $serial, $pin='0000', $user='', $realm='', $type='HMAC', $tokenrealm='', $otplen=8, $hashlib='sha1')
-    {
-        $genkey = ($otpkey == "") ? 1 : 0;
-        curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/admin/init");
-        curl_setopt($this->ch, CURLOPT_POST, true);
-        curl_setopt($this->ch, CURLOPT_POSTFIELDS, "otpkey=".$otpkey."&genkey=".$genkey."&serial=".$serial."&pin=".$pin."&user=".$user."&realm=".self::REALM."&type=".$type."&tokenrealm=".$tokenrealm."&otplen=".$otplen."&hashlib=".$hashlib);
         curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
         $answer = curl_exec($this->ch);
         if (curl_error($this->ch)) return ("cURL request error!");
@@ -337,16 +291,6 @@ class WibioOtpRequestHelper
         if (curl_error($this->ch)) return ("cURL request error!");
         return json_decode($answer);
     }
-    public function adminSetToken($token, $pin='0000', $MaxFailCount=10, $SyncWindow=0, $OtpLen=8, $CounterWindow=0, $hashlib='sha1', $timeWindow=0, $timeStep=30, $timeShift=10, $countAuthSuccessMax=0, $countAuthSuccess=0, $countAuth=0, $countAuthMax=0, $validityPeriodStart=0, $validityPeriodEnd=0, $phone='')
-    {
-        curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/admin/set");
-        curl_setopt($this->ch, CURLOPT_POST, true);
-        curl_setopt($this->ch, CURLOPT_POSTFIELDS, "serial=".$token."&pin=".$pin."&MaxFailCount=".$MaxFailCount."&SyncWindow=".$SyncWindow."&OtpLen=".$OtpLen."&CounterWindow=".$CounterWindow."&hashlib=".$hashlib."&timeWindow=".$timeWindow."&timeStep=".$timeStep."&timeShift=".$timeShift."&countAuthSuccessMax=".$countAuthSuccessMax."&countAuthSuccess=".$countAuthSuccess."&countAuth=".$countAuth."&countAuthMax=".$countAuthMax."&validityPeriodStart=".$validityPeriodStart."&validityPeriodEnd=".$validityPeriodEnd."&phone=".$phone);
-        curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
-        $answer = curl_exec($this->ch);
-        if (curl_error($this->ch)) return ("cURL request error!");
-        return json_decode($answer);
-    }
 
 /*show()
         GET /admin/show
@@ -379,24 +323,6 @@ class WibioOtpRequestHelper
     {
         curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/admin/show?serial=".$token."&viewrealm=".$viewrealm."&tokeninfo_format=".$tokeninfo_format);
         curl_setopt($this->ch, CURLOPT_POST, false);
-        curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
-        $answer = curl_exec($this->ch);
-        if (curl_error($this->ch)) return ("cURL request error!");
-        return json_decode($answer);
-    }
-
-/*tokenrealm()
-        POST /admin/tokenrealm
-        set the realms a token belongs to
-        Parameters
-            serial – (required) serial number of the token
-            realms – (required) comma seperated list of realms
-*/
-    public function adminTokenRealm($token, $realms)
-    {
-        curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/admin/tokenrealm");
-        curl_setopt($this->ch, CURLOPT_POST, true);
-        curl_setopt($this->ch, CURLOPT_POSTFIELDS, "serial=".$token."&realms=".$realms);
         curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
         $answer = curl_exec($this->ch);
         if (curl_error($this->ch)) return ("cURL request error!");
