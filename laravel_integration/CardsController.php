@@ -18,6 +18,7 @@ use App\Helpers\TeamsHelper;
 
 class CardsController extends Controller
 {
+    const APIKEY = "****************";
     /**************MASTER VIEWS**************/
     public function viewUsers(Request $request)
     {
@@ -44,34 +45,22 @@ class CardsController extends Controller
     /************** ACTIONS **************/
     public function generateUserAndToken(Request $request)
     {
-        $WibioOtpRequestHelper = new WibioOtpRequestHelper();
-        $WibioOtpRequestHelper->init();
-        while (1)
-        {
-            $serial = str_pad(rand(100000000,1999999999), 13, '0', STR_PAD_LEFT);
-            $resp = $WibioOtpRequestHelper->adminCheck($serial);
-            if ($resp == "cURL request error!") return back()->withError('Generate new token', 'Unable to create the token');
-            if (($resp->result->value->unique) == true)
-                break;
-        }
-        $WibioOtpRequestHelper = null;
-
-        /* 
-            send user generation request to WibioWebserver
-            $request->validate([
-                'company' => 'required|max:255',
-                'userEmail' => 'required|max:255',
-                'givenName' => 'required|max:255',
-                'telephoneNumber' => 'max:255',
-                'mobile' => 'max:255',
-                'cardType' => 'required|max:1',   //read from card
-                'cardId' => 'required|max:16',    //read from card
-                'otpLenght' => 'required|max:1',  // 6, 8
-                'otpType' => 'required|max:4',    // HMAC, TOTP
-                'intend' => 'required|max:255',
-                'comment' => 'max:255',
-            ]);
-        */
+        $response = Http::withHeaders(['X-Authorization' => self::APIKEY])
+                        ->post('https://smartmanager.wibiocard.com/api/generateUserAndToken', 
+                        [
+                            'company' => '**********',   //the company name is provided by Wibiocard
+                            'userEmail' => '**********',
+                            'givenName' => '**********',
+                            'telephoneNumber' => '**********',
+                            'mobile' => '**********',
+                            'cardType' => '**********',   //readable from card
+                            'cardId' => '**********',     //readable from card
+                            'otpLenght' => '**********',  // 6, 8
+                            'otpType' => '**********',    // HMAC, TOTP if supported
+                            'intend' => 'WebAuth',        
+                            'comment' => '**********',
+                        ]
+                    );
         if ($resp == "cURL request error!") return back()->withError('Generate new token', 'Unable to create the token');
         return view('admin.card_perso', compact('serial'));
     }
