@@ -1,0 +1,59 @@
+@vite(['resources/js/webcard.js', 'resources/js/personalizer.js'])
+<script src="https://cdn.form.io/js/formio.embed.js"></script>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            Personalize card
+        </h2>
+    </x-slot>
+    <div class="mx-auto mt-2 sm:px-6 lg:px-8">
+        <div class="mx-auto mt-2 sm:px-6 lg:px-8">
+            <div class="card" id="card_mess">
+                <div class="card-header text-white bg-success" id="h_mess"></div>
+                <div class="card-body" id="body_mess">
+                    <h5 class="card-title" id="t_mess"></h5>
+                    <p class="card-text" id="b_mess">Card personalization services</p>
+                </div>
+                <div class="card-footer text-success bg-light-success" id="f_mess"></div>
+            </div>
+        </div>
+    </div>
+    <div id="spinner-wrapper" class="spinner-wrapper"><img class="mx-auto my-auto" src={{ Vite::asset('resources/images/rolling-slow.gif') }} alt="Wait..."></div>
+    <div id="card_div" class="mt-2"></div>
+    <div class="w-75 mx-auto">
+        <form class="py-3" id="form_perso" action="{{ route('cards' }}" method="GET">
+            @csrf
+            <div class="collapse" id="authenticationform">
+                <input type="text" readonly id="token" name="token" value="{{ $token }}">
+                <button id="run_perso" data-bs-toggle="tooltip" data-bs-placement="top" title="Run personalization" class="btn btn-primary float-end m-2">Write personalization on card</button>
+            </div>
+        </form>
+    </div>
+    <div class="modal" tabindex="-1" role="dialog" id="fingerModal">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-light-warning">
+                    <h5 class="modal-title">Fingerprint required</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="sensor_container">
+                        <img src="{{ Vite::asset('resources/images/fingerprint_partial.png') }}" id="imgfinger" class="mx-auto imgfinger_request" alt="Wibio fingerprint request">
+                    </div>
+                    <h4 class="text-center">Please put your finger on the sensor and do not remove it.</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" tabindex="-1" role="dialog" id="formio-wrapper">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-light-warning">
+                    <h5 class="modal-title">Custom data required</h5>
+                </div>
+                <div class="modal-body formio-modal-content">
+                    <div id="formio-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
