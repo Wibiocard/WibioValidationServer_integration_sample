@@ -59,7 +59,6 @@
                     <div class="row" id="enrollSchema">
                         <div class="col-12 my-2">
                             <span class="h5">When you are ready to enroll your fingerprint, click on the button below and follow the instructions.</span>
-                            <button class="btn btn-success" id="enroll">Enroll fingerprint</button>
                         </div>
                         <ul>
                             <li>Number of remaining finger required to enroll this smartcard: <span id="FingerToEnroll"></span> of 2</li>
