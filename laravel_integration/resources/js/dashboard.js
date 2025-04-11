@@ -183,10 +183,10 @@ async function executePartialScript()
             c.manageMessages("#b_mess", "d", "Card type doesn't support cloud functonality");
             break;
     }
-
-    document.querySelector('#otp').addEventListener('click', function(event){
-        navigator.clipboard.writeText(document.querySelector("#otp").innerHTML.split(": ")[1]);
-    });
+    if (document.body.contains(document.querySelector('#otp')))
+        document.querySelector('#otp').addEventListener('click', function(event){
+            navigator.clipboard.writeText(document.querySelector("#otp").innerHTML.split(": ")[1]);
+        });
 
 }
 
@@ -248,7 +248,7 @@ function VerifyEnrollStatus_F()
                                 for (let i = 0; i < TotalTouched; i++)
                                 {
                                     let touch = document.createElement('div');
-                                    touch.classList.add('col-4', 'sensor_container');
+                                    touch.classList.add('col-3', 'sensor_container');
                                     let img = document.createElement('img');
                                         img.src = (i>=TouchedEnrolled)? '/images/fingerprint_partial.png' : '/images/fingerprint.png';
                                         img.id = 'imgenroll'+i;
@@ -348,7 +348,7 @@ function VerifyEnrollStatus_T()
                             for (let i = 0; i < TotalTouched; i++)
                             {
                                 let touch = document.createElement('div');
-                                touch.classList.add('col-4', 'sensor_container');
+                                touch.classList.add('col-3', 'sensor_container');
                                 let img = document.createElement('img');
                                     img.src = (i>=TouchedEnrolled)? '/images/fingerprint_partial.png' : '/images/fingerprint.png';
                                     img.id = 'imgenroll'+i;
@@ -447,49 +447,26 @@ function VerifyEnrollStatus_D()
         new Promise(resolve => resolve(c.CmdsExecutor(c._reader, "[SelectEnroll][LoginEnroll][GetEnrollStatus {finger_id=00}][GetEnrollStatus {finger_id=01}]"))).then((execResult) => {
             if (c.countApduResponse(execResult) == 4)
             {
-                let cId = 0;
-                if (c.checkApduResponse(execResult[cId]) == false)
+                let TotalTouched = 0;
+                let TotalTouchedList = [];
+                if (c.checkApduResponse(execResult[0]) == false)
                 {
                     c.manageMessages("#f_mess", "d", "Applet not found");
                     throw 'Applet not found';
                 }
-                if (c.checkApduResponse(execResult[++cId]) == false)
+                if (c.checkApduResponse(execResult[1]) == false)
                 {
                     c.manageMessages("#f_mess", "d", "Failed login");
                     throw 'Failed login';
                 }
                 c.manageMessages("#f_mess", "s", "Card selected");
-                let enrolledFinger = 0;
-                const recursiveFingerCall = (findex) => {
-                    if (findex == 2 && document.body.contains(document.querySelector('#useCard')))
+				for (let cId=2; cId<4; cId++)
+				{
+					let findex = cId-2;
+                    let touchList = [];
+					if (c.checkApduResponse(execResult[cId]) == true)
                     {
-                        document.querySelector('#enrollCard').remove();
-                        ListSequences_T();
-                        document.querySelector('#getOtp').addEventListener('click', async function(event){
-                            let sequence = document.querySelector("#sequences").value;
-                            let otpType = sequence.split(": ")[0];
-                            if (!sequence)
-                                c.manageMessages("#b_mess", "d", "Select a sequence to get OTP");
-                            else
-                                if (otpType == "HOTP")
-                                    GetHotp_T(sequence.split(": ")[1]);
-                                else
-                                    GetTotp_T(sequence.split(": ")[1]);
-                        });
-                        document.querySelector('#deleteOtp').addEventListener('click', async function(event){
-                            let sequence = document.querySelector("#sequences").value;
-                            let otpType = sequence.split(": ")[0];
-                            if (!sequence)
-                                c.manageMessages("#b_mess", "d", "Select a sequence to get OTP");
-                            else
-                                if (confirm("Are you sure you want to delete the OTP sequence?" == true))
-                                    DeleteSequence_T(sequence.split(": ")[1]);
-                        });
-                        return;
-                    }
-                    if (c.checkApduResponse(execResult[++cId]) == true)
-                    {
-                        var ApduData = c.parseApduResponse(execResult[cId]);
+						var ApduData = c.parseApduResponse(execResult[cId]);
                         if (ApduData.finger_status == "Finger invalid")
                         {
                             document.querySelector('#enrollCard').remove();
@@ -507,30 +484,48 @@ function VerifyEnrollStatus_D()
                                         throw 'Card reset error';
                                     }
                                 });
-                              } else {
+                            } else {
                                 throw ApduData.finger_status;
-                              }
+                            }
                         }
                         else if (ApduData.finger_status == "Not enrolled" || ApduData.finger_status == "Enroll wip")
                         {
-                            if (document.body.contains(document.querySelector('#tab_finger_'+(findex-1)))) document.querySelector('#tab_finger_'+(findex-1)).remove();
                             if (document.body.contains(document.querySelector('#useCard'))) document.querySelector('#useCard').remove();
+                            if (document.body.contains(document.querySelector('#identityCard'))) document.querySelector('#identityCard').remove();
 
                             document.querySelector('#FingerToEnroll').innerHTML = findex+1;
                             let TouchedEnrolled = document.querySelector('#TouchedEnrolled').innerHTML = Number(ApduData.touches_no);
-                            let TotalTouched = Number(ApduData.max_touches);
-                            let TouchedRemain = document.querySelector('#TouchedRemain').innerHTML = TotalTouched - TouchedEnrolled;
+                            TotalTouched = Number(ApduData.max_touches);
+                            document.querySelector('#TouchedRemain').innerHTML = TotalTouched - TouchedEnrolled;
                             let finger = document.createElement('div');
                             finger.classList.add('row', 'sensors');
+                            finger.style.zoom = "60%";
                             finger.id = 'tab_finger_'+findex;
-                            let touchList = [];
-                            let binaryString = parseInt(ApduData.touches_details, 16).toString(2).padStart(TotalTouched, '0');
-                            for (let i = 0; i < TotalTouched; i++)
+                            let touch = document.createElement('div');
+                                touch.classList.add('col');
+                                let img = document.createElement('img');
+                                    img.src = "/images/enrol_finger_"+findex+".png";
+                                    img.alt = 'Wibio finger request';
+                                    img.style.width = "160px";
+                                    img.style.margin = "auto";
+                                let btn = document.createElement('button');
+                                    btn.classList.add('btn', 'btn-secondary', 'mx-auto', 'w-100');
+                                    btn.id = "enroll_"+findex;
+                                    btn.innerHTML = "Enroll";
+                                    btn.onclick = function() {
+                                        if (document.body.contains(document.querySelector('#tab_finger_'+findex)))
+                                            enrollFinger(findex, TotalTouchedList[findex], TotalTouched);
+                                    };
+                            touch.appendChild(img);
+                            touch.appendChild(btn);
+                            finger.appendChild(touch);
+                            let binaryString = parseInt(ApduData.touches_details[0][0]).toString(2).padStart(TotalTouched/2, "0")+parseInt(ApduData.touches_details[0][1]).toString(2).padStart(TotalTouched/2, "0");
+							for (let i = 0; i < TotalTouched; i++)
                             {
-                                const tstatus = binaryString[TotalTouched-i-1];
+                                const tstatus = binaryString[binaryString.length-i-1];
                                 touchList.push(tstatus);
                                 let touch = document.createElement('div');
-                                touch.classList.add('col-4', 'sensor_container');
+                                touch.classList.add('sensor_container', 'col');
                                 let img = document.createElement('img');
                                     img.src = (tstatus == 0) ? '/images/fingerprint_partial.png' : '/images/fingerprint.png';
                                     img.id = 'imgenroll'+i;
@@ -539,51 +534,10 @@ function VerifyEnrollStatus_D()
                                 touch.appendChild(img);
                                 finger.appendChild(touch);
                             }
-                            document.querySelector('#enrollSchema').appendChild(finger);
-                            document.querySelector('#enroll').addEventListener('click', async function(event){
-                                const recursiveTouchesCall = (index) => {
-                                    if (touchList[index] == 1) return recursiveTouchesCall(++index);
-                                    new Promise(resolve => resolve(c.CmdsExecutor(c._reader, "[EnrollFingerprint {finger_id=0"+findex+"} {touch_id=0"+(index+1)+"}]"))).then(async (execEnrollResult) => {
-                                        if (c.countApduResponse(execEnrollResult) == 1 && c.checkApduResponse(execEnrollResult[0]) == true)
-                                        {
-                                            document.querySelector("#imgenroll"+index).classList.replace('imgfinger_hidden', 'imgfinger');
-                                            document.querySelector("#imgenroll"+index).src = '/images/fingerprint.png';
-                                            TouchedRemain--;
-                                            document.querySelector('#TouchedEnrolled').innerHTML = TouchedEnrolled;
-                                            document.querySelector('#TouchedRemain').innerHTML = index;
-                                            index++;
-                                        }else{
-                                            document.querySelector("#imgenroll"+index).classList.replace('imgfinger_hidden', 'imgfinger');
-                                            document.querySelector("#imgenroll"+index).src = '/images/fingerprint_broken.png';
-                                            await new Promise((res, _) => setTimeout(res, 3000));
-                                        }
-                                        if (index < TotalTouched) {
-                                            return recursiveTouchesCall(index)
-                                        } else {
-                                            c.manageMessages("#b_mess", "s", "Enroll finger completed. Wait while closing the enrollment for finger "+ (findex+1));
-                                            new Promise(resolve => resolve(c.CmdsExecutor(c._reader, "[FinalizeEnroll {finger_id=0"+findex+"}]"))).then(async (execFinalizeResult) => {
-                                                if (c.countApduResponse(execFinalizeResult) == 1 && c.checkApduResponse(execFinalizeResult[0]) == true)
-                                                {
-                                                    document.querySelector('#tab_finger_'+findex).remove();
-                                                    return recursiveFingerCall(++findex);
-                                                }
-                                                else
-                                                {
-                                                    c.manageMessages("#f_mess", "d", "Unable to finalize the enrollment. Please contact the administrator to reset the card");
-                                                    throw 'Unable to finalize the enrollment. Please contact the administrator to reset the card';
-                                                }
-                                            });
-                                        }
-                                    })
-                                }
-                                recursiveTouchesCall(0);
-                            });
+							document.querySelector('#enrollSchema').appendChild(finger);
+                            TotalTouchedList.push(touchList);
                         }
-                        else if (ApduData.finger_status == "Finalized")
-                        {
-                            return recursiveFingerCall(++findex);
-                        }
-                        else if (ApduData.finger_status == "Touches reached")
+						else if (ApduData.finger_status == "Touches reached")
                         {
                             new Promise(resolve => resolve(c.CmdsExecutor(c._reader, "[GetEnrollStatus {finger_id=0"+findex+"}][FinalizeEnroll {finger_id=0"+findex+"}][GetEnrollStatus {finger_id=0"+findex+"}]"))).then(async (execFinalizeResult) => {
                                 if (c.countApduResponse(execFinalizeResult) == 3
@@ -594,7 +548,7 @@ function VerifyEnrollStatus_D()
                                     && c.parseApduResponse(execFinalizeResult[2]).finger_status == "Enrolled not allowed")
                                 {
                                     document.querySelector('#tab_finger_'+findex).remove();
-                                    return recursiveFingerCall(++findex);
+                                    c.manageMessages("#f_mess", "d", "Enrollment of finger finalized. If nothing else appens please remove and reinsert the card on reader");
                                 }
                                 else
                                 {
@@ -603,21 +557,90 @@ function VerifyEnrollStatus_D()
                                 }
                             });
                         }
-                    }
-                    else
+                        else if (ApduData.finger_status == "Finalized")
+                        {
+                            c.manageMessages("#f_mess", "s", "Finger enrolled");
+                            if (cId == 3 && document.body.contains(document.querySelector('#useCard')))
+                            {
+                                document.querySelector('#enrollCard').remove();
+                                ListSequences_T();
+                                document.querySelector('#getOtp').addEventListener('click', async function(event){
+                                    let sequence = document.querySelector("#sequences").value;
+                                    let otpType = sequence.split(": ")[0];
+                                    if (!sequence)
+                                        c.manageMessages("#b_mess", "d", "Select a sequence to get OTP");
+                                    else
+                                        if (otpType == "HOTP")
+                                            GetHotp_T(sequence.split(": ")[1]);
+                                        else
+                                            GetTotp_T(sequence.split(": ")[1]);
+                                });
+                                document.querySelector('#deleteOtp').addEventListener('click', async function(event){
+                                    let sequence = document.querySelector("#sequences").value;
+                                    let otpType = sequence.split(": ")[0];
+                                    if (!sequence)
+                                        c.manageMessages("#b_mess", "d", "Select a sequence to delete it");
+                                    else
+                                        if (confirm("Are you sure you want to delete the "+otpType+" sequence?" == true))
+                                            DeleteSequence_T(sequence.split(": ")[1]);
+                                });
+                                return;
+                            }
+                        }
+					}
+					else
                     {
                         document.querySelector('#enrollCard').remove();
                         document.querySelector('#useCard').remove();
                         c.manageMessages("#f_mess", "d", "Enroll error. Please contact the administrator to reset the card");
                         throw 'Enroll error. Please contact the administrator to reset the card';
                     }
-                }
-                recursiveFingerCall(enrolledFinger);
+                    TotalTouchedList.push(touchList);
+				}
             }
         });
     } catch(ex) {
         console.log(ex);
         c.manageMessages("#b_mess", "d", "An error occurred during enroll status verification. Please check your card and try again");
+    }
+}
+
+async function enrollFinger(findex, touchList, TotalTouched) {
+	let index = 0;
+    while (index < TotalTouched) {
+        if (touchList[index] == 0) {
+            try {
+                await c.CmdsExecutor(c._reader, `[SelectEnroll][LoginEnroll][EnrollFingerprint {finger_id=0${findex}} {touch_id=0${index+1}}]`).then(
+                    (execEnrollResult) => {
+                    if (c.countApduResponse(execEnrollResult) == 3 && c.checkApduResponse(execEnrollResult[2]) == true) {
+                        document.querySelector(`#imgenroll${index}`).classList.replace("imgfinger_hidden", "imgfinger");
+                        document.querySelector(`#imgenroll${index}`).src = "/images/fingerprint.png";
+                        document.querySelector("#TouchedEnrolled").innerHTML = index;
+                        document.querySelector("#TouchedRemain").innerHTML = TotalTouched-index;
+                    } else {
+                        document.querySelector(`#imgenroll${index}`).classList.replace("imgfinger_hidden", "imgfinger");
+                        document.querySelector(`#imgenroll${index}`).src = "/images/fingerprint_broken.png";
+                        index--;
+                    }
+                    new Promise((res) => setTimeout(res, 3000));
+                });
+            } catch (error) {
+                console.error("Error during enrollment:", error);
+            }
+        }
+        index++;
+    }
+
+    try {
+        let execFinalizeResult = await c.CmdsExecutor(c._reader, `[FinalizeEnroll {finger_id=0${findex}}]`);
+        if (c.countApduResponse(execFinalizeResult) == 1 && c.checkApduResponse(execFinalizeResult[0]) == true) {
+            c.manageMessages("#f_mess", "s", "Enrollment of finger "+ (findex+1) +" finalized");
+        } else {
+            c.manageMessages("#f_mess", "d", "Unable to finalize the enrollment. Please contact the administrator to reset the card");
+            throw "Unable to finalize the enrollment. Please contact the administrator to reset the card";
+        }
+    } catch (error) {
+        console.error("Error during finalization:", error);
     }
 }
 
