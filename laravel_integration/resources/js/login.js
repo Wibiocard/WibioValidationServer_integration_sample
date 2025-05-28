@@ -233,6 +233,13 @@ function ListSequences_F()
                         c.manageMessages("#b_mess", "w", "This card is not associated with any OTP sequence. Please contact the administrator to associate the card with an OTP sequence");
                         document.querySelector("#useCard").remove();
                     }
+                    else if (ApduData.Sequence.length == 1)
+                    {
+                    	document.querySelector("#sequences").add(new Option("HOTP: " + sequence[0]));
+                        document.querySelector("#sequences").setAttribute("disabled", "true");
+                        document.querySelector("#sequences").selectedIndex = 0;
+                        document.querySelector("#getOtp").click();
+                    }
                     else
                         ApduData.Sequence.forEach((sequence, index) => {
                             document.querySelector("#sequences").add(new Option("HOTP: " + sequence));
@@ -276,6 +283,13 @@ function ListSequences_D()
                     {
                         c.manageMessages("#b_mess", "w", "This card is not associated with any OTP sequence. Please contact the administrator to associate the card with an OTP sequence");
                         document.querySelector("#useCard").remove();
+                    }
+                    else if (ApduData.Account.length == 1)
+                    {
+                        document.querySelector("#sequences").add(new Option(ApduData.OTP_type[0] + ": " + ApduData.Account[0]));
+                        document.querySelector("#sequences").setAttribute("disabled", "true");
+                        document.querySelector("#sequences").selectedIndex = 0;
+                        document.querySelector("#getOtp").click();
                     }
                     else
                         ApduData.Account.forEach((sequence, index) => {
@@ -465,5 +479,3 @@ async function sendData(otp, sequence, email) {
     document.body.appendChild(form);
     form.submit();
 }
-
-
