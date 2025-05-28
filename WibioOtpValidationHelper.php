@@ -30,7 +30,7 @@ class WibioOtpValidationHelper
 */
     public function validateOtp($user, $pass, $realm, $serial = '')
     {
-        curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/validate/check?user=".$user."&pass=".$pass."&realm=".$realm."&serial=".$serial);
+        curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/validate/check?user=".$user."&pass=".$pass."&realm=".strtolower($realm)."&serial=".$serial);
         curl_setopt($this->ch, CURLOPT_POST, false);
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -41,7 +41,7 @@ class WibioOtpValidationHelper
 
     public function sendSms($user, $pin, $realm)
     {
-        curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/validate/smspin=".$user."&pass=".$pin."&realm=".$realm);
+        curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/validate/smspin=".$user."&pass=".$pin."&realm=".strtolower($realm));
         curl_setopt($this->ch, CURLOPT_POST, false);
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
