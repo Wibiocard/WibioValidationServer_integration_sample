@@ -11,6 +11,7 @@ use App\Helpers\WibioOtpValidationHelper;
 
 class Wibio2FAController extends Controller
 {
+    private $realm = "********************";
     /**
      * Handle the 2FA login request.
      *
@@ -38,7 +39,7 @@ class Wibio2FAController extends Controller
         if (!$token) return back()->withError('Wibio token login', 'Token not found');
 
         $WibioOtpValidationHelper = new WibioOtpValidationHelper();
-        $resp = $WibioOtpValidationHelper->validateOtp($user->email, $otp, '');  //realm implicit in email address
+        $resp = $WibioOtpValidationHelper->validateOtp(explode("@", $user->email)[0], $otp, $realm);  //realm to be compiled
         $WibioOtpValidationHelper = null;
         if ($resp == "cURL request error!") return back()->withError('Wibio token login', 'Unable to validate token');
         if ($resp->result->value == true)
@@ -47,6 +48,6 @@ class Wibio2FAController extends Controller
             return redirect()->intended(route('dashboard', absolute: false));
         }
         else
-            return back()->withError('Wibio token login', $resp->detail->error);
+            return back()->withError('Wibio token login error', $resp->detail->error);
     }
 }
