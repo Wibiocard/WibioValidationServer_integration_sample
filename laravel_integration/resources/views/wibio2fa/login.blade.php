@@ -8,7 +8,17 @@
     </x-slot>
     <div class="container">
         <div class="mx-auto mt-2 sm:px-6 lg:px-8">
-            <h4>Wibiocard login for user: <input type="text" readonly id="user_email" value="{{ $email }}"/></h4>
+            <div class="row">
+                <div class="form-group col-2 h3">
+                    Login for user:
+                </div>
+                <div class="form-group col-6">
+                    <input type="text" readonly id="user_email" class="form-control-plaintext"  value="{{ $email }}"/>
+                </div>
+                <div class="form-group col-4 text-center">
+                    <a class="float-end h6" href="{{ route("2fa.login") }}">Can't access with smartcard? Use the Google Authenticator as backup MFA login</a>
+                </div>
+            </div>
             <div class="card" id="card_mess">
                 <div class="card-header text-white bg-success" id="h_mess"></div>
                 <div class="card-body" id="body_mess">
