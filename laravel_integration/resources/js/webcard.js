@@ -53,7 +53,7 @@
             + "background-color:rgba(250,250,210,0.85);border-bottom:1px solid gold;z-index:1030;"
           banner.innerHTML = `
             <p style="margin:8pt;font:11pt Helvetica;color:black;">
-              Something went wrong. Try to reinstall the extension.
+              Something went wrong. Install the web extension if it missing.
             </p>
           `;
           document.body.appendChild(banner);
