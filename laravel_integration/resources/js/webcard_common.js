@@ -177,6 +177,10 @@ export function wait(ms){
    }
 }
 
+export function reverseString(str) {
+    return (str === '') ? '' : reverseString(str.substr(1)) + str.charAt(0);
+}
+
 /**
  * Recognizes a card using the provided reader.
  * If more than 1 card has the same ATR, the GetVersion command is used to identify the card.
@@ -201,8 +205,8 @@ export async function recognizeCard(reader)
             })
             if (!idIdx)
                 throw 'Card not recognized'
-            _cardId = check.Id[idIdx[0].result.cmdRes.cmdIdx]
-            _cardType = check.Type[idIdx[0].result.cmdRes.cmdIdx];
+            _cardId = check.Id[idIdx[0].result.cmdIdx]
+            _cardType = check.Type[idIdx[0].result.cmdIdx];
         } else {
             _cardId = check.Id
             _cardType = check.Type;
@@ -312,7 +316,9 @@ export async function rollbackToken(token) {
             'X-Authorization': apiKey
             }
         })
-        return await response.text()
+        const data = await response.json();
+        if (data.Status == 'error') window.location.href = '/error/Rollback token generation/' + data.Message;
+        return true
     } catch(ex) {
         console.log(ex);
         manageMessages("#b_mess", "d", "Error during rollback request. Check your internet connection and try again");
@@ -392,6 +398,7 @@ async function getSupportedCards(renew = false)
             }
         });
         const data = await response.json();
+        if (data.Status == 'error') window.location.href = '/error/Get supported cards/' + data.Message;
         _supportedCards = [...(data.Cards || [])];
         return _supportedCards;
     } catch(ex){
@@ -417,7 +424,9 @@ export async function checkCardByAtr(Atr){
             'X-Authorization': apiKey
             }
         })
-        return await response.json()
+        const data = await response.json();
+        if (data.Status == 'error') window.location.href = '/error/Check card by ATR/' + data.Message;
+        return data
     } catch(ex) {
         console.log(ex);
         manageMessages("#b_mess", "d", "Check card by atr failed. Please check your smartcard and try again");
@@ -437,7 +446,7 @@ export async function checkCardByAtr(Atr){
 async function getCommand(cardId, commandName)
 {
     if (commandName.startsWith("Personalize"))
-        return getPersonalizationCommand(cardId, commandName, {"token": document.querySelector("#token").value});
+        return getPersonalizationCommand(cardId, commandName, {"token": document.querySelector("#token").value, "realm": document.querySelector("#realm").value});
     try {
         let cache = getCommand.cache || (getCommand.cache = new Map());
         let url = `${baseUrl}/getCommand/${cardId}/${channel}/${commandName}`;
@@ -451,14 +460,9 @@ async function getCommand(cardId, commandName)
                 'X-Authorization': apiKey
                 }
             }).then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                try {
-                    return response.json();
-                } catch (jsonError) {
-                    throw new Error('Failed to parse JSON response');
-                }
+                const data = response.json();
+                if (data.Status == 'error') window.location.href = '/error/Get card command/' + data.Message;
+                return data;
             }).catch(error => {
                 cache.delete(url); // Remove the failed promise from the cache
                 throw error;
@@ -482,7 +486,7 @@ async function getCommand(cardId, commandName)
  * @returns {Promise<Object>} The response from the server as a JSON object.
  * @throws Will throw an error if the command is not found.
  */
-async function generateCommand(cardId, commandName, data) {
+async function generateCommand(cardId, commandName, params) {
     try {
         const response = await fetch(`${baseUrl}/generateCommand/${cardId}/${channel}/${commandName}`, {
         method: 'POST',
@@ -490,9 +494,11 @@ async function generateCommand(cardId, commandName, data) {
             'X-Authorization': apiKey,
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ data: data || {} })
+        body: JSON.stringify({ data: params || {} })
         })
-        return await response.json()
+        const data = await response.json();
+        if (data.Status == 'error') window.location.href = '/error/Generate card command/' + data.Message;
+        return data
     } catch(err) {
         console.log(err)
     }
@@ -519,7 +525,9 @@ async function getPersonalizationCommand(cardId, commandName, request)
             },
             body: JSON.stringify(request)
         })
-        return await response.json()
+        const data = await response.json();
+        if (data.Status == 'error') window.location.href = '/error/Generate card command/' + data.Message;
+        return data
     } catch(ex) {
         console.log(ex);
         manageMessages("#b_mess", "d", "Unable to retrive card command from webserver. Check your internet connection and try again");
@@ -544,6 +552,7 @@ export async function listUserData()
             },
         });
         const data = await response.json();
+        if (data.Status == 'error') window.location.href = '/error/List user data/' + data.Message;
         _userData = [...(data.Uncrypted || [])];
         return _userData;
     } catch(ex) {
@@ -581,7 +590,9 @@ async function fetchWithRateLimit(url, options = {}, retries = 5, backoff = 1000
           throw new Error('Too many requests. Please try again later.');
         }
       }
-      return response.json();
+      const data = await response.json();
+      if (data.Status == 'error') window.location.href = '/error/Generate card command/' + data.Message;
+      return data
     } catch (error) {
       console.error('Fetch error:', error);
       throw error;
@@ -725,7 +736,3 @@ export function unloadInterface(reader)
             _reader = null;
         }
 }
-
-
-
-
