@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Google2FA;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -33,13 +34,17 @@ class Wibio2FAController extends Controller
      */
     public function verify2FA(Request $request)
     {
+        $request->validate([
+            'otp' => 'required|string',
+            'sequence' => 'required|string'
+        ]);
         $user = User::where("email", $request->email)->first();
         if (!$user) return back()->withError('Wibio token login', 'User not found');
         $token = $user->hardware_token;
         if (!$token) return back()->withError('Wibio token login', 'Token not found');
 
         $WibioOtpValidationHelper = new WibioOtpValidationHelper();
-        $resp = $WibioOtpValidationHelper->validateOtp(explode("@", $user->email)[0], $otp, $realm, $token);  //realm to be compiled
+        $resp = $WibioOtpValidationHelper->validateOtp(explode("@", $user->email)[0], $request->otp, $realm, $token->token);
         $WibioOtpValidationHelper = null;
         if ($resp == "cURL request error!") return back()->withError('Wibio token login', 'Unable to validate token');
         if ($resp->result->value == true)
