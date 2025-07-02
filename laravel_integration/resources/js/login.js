@@ -235,7 +235,7 @@ function ListSequences_F()
                     }
                     else if (ApduData.Sequence.length == 1)
                     {
-                    	document.querySelector("#sequences").add(new Option("HOTP: " + sequence[0]));
+                    	document.querySelector("#sequences").add(new Option("HOTP: " + ApduData.Sequence[0]));
                         document.querySelector("#sequences").setAttribute("disabled", "true");
                         document.querySelector("#sequences").selectedIndex = 0;
                         document.querySelector("#getOtp").click();
