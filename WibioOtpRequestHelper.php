@@ -188,7 +188,7 @@ class WibioOtpRequestHelper
         if (curl_error($this->ch)) return ("cURL request error!");
         return json_decode($answer);
     }
-    
+
 /*initToken()
         POST /admin/init
         initializes a token
@@ -218,7 +218,7 @@ class WibioOtpRequestHelper
         if (curl_error($this->ch)) return ("cURL request error!");
         return json_decode($answer);
     }
-    
+
 /*remove()
         POST /admin/remove
         deletes either a certain token given by serial or all tokens of a user
@@ -332,6 +332,16 @@ class WibioOtpRequestHelper
         curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/admin/set");
         curl_setopt($this->ch, CURLOPT_POST, true);
         curl_setopt($this->ch, CURLOPT_POSTFIELDS, "user=".$user."&pin=".$pin."&MaxFailCount=".$MaxFailCount."&SyncWindow=".$SyncWindow."&OtpLen=".$OtpLen."&CounterWindow=".$CounterWindow."&hashlib=".$hashlib."&timeWindow=".$timeWindow."&timeStep=".$timeStep."&timeShift=".$timeShift."&countAuthSuccessMax=".$countAuthSuccessMax."&countAuthSuccess=".$countAuthSuccess."&countAuth=".$countAuth."&countAuthMax=".$countAuthMax."&validityPeriodStart=".$validityPeriodStart."&validityPeriodEnd=".$validityPeriodEnd."&phone=".$phone);
+        curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
+        $answer = curl_exec($this->ch);
+        if (curl_error($this->ch)) return ("cURL request error!");
+        return json_decode($answer);
+    }
+    public function adminSetToken($token, $pin='0000', $MaxFailCount=10, $SyncWindow=0, $OtpLen=8, $CounterWindow=0, $hashlib='sha1', $timeWindow=0, $timeStep=30, $timeShift=10, $countAuthSuccessMax=0, $countAuthSuccess=0, $countAuth=0, $countAuthMax=0, $validityPeriodStart=0, $validityPeriodEnd=0, $phone='')
+    {
+        curl_setopt($this->ch, CURLOPT_URL, self::SERVER."/admin/set");
+        curl_setopt($this->ch, CURLOPT_POST, true);
+        curl_setopt($this->ch, CURLOPT_POSTFIELDS, "serial=".$token."&pin=".$pin."&MaxFailCount=".$MaxFailCount."&SyncWindow=".$SyncWindow."&OtpLen=".$OtpLen."&CounterWindow=".$CounterWindow."&hashlib=".$hashlib."&timeWindow=".$timeWindow."&timeStep=".$timeStep."&timeShift=".$timeShift."&countAuthSuccessMax=".$countAuthSuccessMax."&countAuthSuccess=".$countAuthSuccess."&countAuth=".$countAuth."&countAuthMax=".$countAuthMax."&validityPeriodStart=".$validityPeriodStart."&validityPeriodEnd=".$validityPeriodEnd."&phone=".$phone);
         curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
         $answer = curl_exec($this->ch);
         if (curl_error($this->ch)) return ("cURL request error!");
